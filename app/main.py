@@ -1,17 +1,31 @@
-from fastapi import FastAPI
-from app.database.config import engine, Base
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from app.database.config import engine, Base, get_db
 from app.database import models
+from app import schemas
+from app.core import security, auth
 
-# Esto crea las tablas si no existen al iniciar la app
-# Aquí es donde realmente se usa el metadata, no se importa
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(
-    title="API Observatorio V&M",
-    description="Backend para el Sistema de Monitoreo Automatizado de Medios",
-    version="1.0.0"
-)
+app = FastAPI(title="API Observatorio V&M", version="1.0.0")
+
+@app.post("/auth/login", response_model=schemas.Token)
+def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    if not user or not security.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario o contraseña incorrectos",
+        )
+    
+    access_token = security.create_access_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/users/me", response_model=schemas.UserOut)
+def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
+    return current_user
 
 @app.get("/")
 def read_root():
-    return {"mensaje": "API del Observatorio V&M con Base de Datos conectada y funcionando"}
+    return {"mensaje": "API del Observatorio V&M funcionando"}
