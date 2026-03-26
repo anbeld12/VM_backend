@@ -27,6 +27,32 @@ def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = 
     access_token = security.create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
+@app.post("/users", response_model=schemas.UserOut)
+def create_user(
+    user_data: schemas.UserCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.require_admin)
+):
+    """
+    Crea un nuevo usuario. Solo accesible por ADMIN.
+    """
+    if db.query(models.User).filter(
+        (models.User.username == user_data.username) | (models.User.email == user_data.email)
+    ).first():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El usuario o email ya existe")
+    
+    new_user = models.User(
+        username=user_data.username,
+        email=user_data.email,
+        nombre_completo=user_data.nombre_completo,
+        hashed_password=security.get_password_hash(user_data.password),
+        role=user_data.role,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
 @app.get("/users/me", response_model=schemas.UserOut)
 def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
@@ -36,9 +62,14 @@ def read_root():
     return {"mensaje": "API del Observatorio V&M funcionando"}
 
 @app.get("/news", response_model=List[NewsOut])
-def get_news(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+def get_news(
+    skip: int = 0,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
     """
-    Obtiene las noticias recolectadas por el scraper.
+    Obtiene las noticias recolectadas por el scraper. Requiere autenticación.
     """
     news = db.query(models.News).order_by(models.News.scraped_at.desc()).offset(skip).limit(limit).all()
     return news

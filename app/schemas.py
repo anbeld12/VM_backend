@@ -1,4 +1,4 @@
-from typing import Optional, List, Any
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr
 from app.database.models import RoleEnum, EnfoqueEnum, AnalysisStatus
 from datetime import datetime
@@ -37,6 +37,7 @@ class NewsBase(BaseModel):
     title: str
     url: str
     media_source: str
+    autor: Optional[str] = None
     published_date: Optional[datetime] = None
 
 class NewsOut(NewsBase):

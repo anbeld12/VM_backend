@@ -15,6 +15,7 @@ class NewsModel(Base):
     content = Column(Text, nullable=False)
     url = Column(String, unique=True, nullable=False)
     media_source = Column(String, nullable=False)
+    autor = Column(String, nullable=True)
     published_date = Column(DateTime, nullable=True)
     scraped_at = Column(DateTime, default=datetime.utcnow)
 

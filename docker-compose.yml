@@ -8,21 +8,19 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/code/app
-    environment:
-      # DATABASE_URL debe usar el nombre del servicio 'db' como host
-      - DATABASE_URL=postgresql://postgres:vm_admin123@db:5432/observatorio_vm
-      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - .env
     depends_on:
       - db
       - redis
+
   scraper:
     build: ./vm_scraper
     container_name: vm_scraper
     volumes:
       - ./vm_scraper:/scraper
-    environment:
-      - DATABASE_URL=postgresql://postgres:vm_admin123@db:5432/observatorio_vm
-      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - .env
     depends_on:
       - db
       - redis
@@ -32,9 +30,9 @@ services:
     container_name: vm_postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: vm_admin123
-      POSTGRES_DB: observatorio_vm
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
