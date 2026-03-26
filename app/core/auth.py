@@ -32,3 +32,9 @@ def check_admin_role(current_user: models.User = Depends(get_current_user)):
     if current_user.role != models.UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Operación no permitida para este rol")
     return current_user
+
+def check_investigator_role(current_user: models.User = Depends(get_current_user)):
+    allowed_roles = [models.UserRole.ADMIN, models.UserRole.COORDINADOR, models.UserRole.INVESTIGADOR]
+    if current_user.role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Se requiere rol de Investigador o superior")
+    return current_user

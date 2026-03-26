@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum, Boolean, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database.config import Base
@@ -35,16 +35,23 @@ class News(Base):
     # Relación con el análisis cualitativo
     analysis = relationship("Analysis", back_populates="news", uselist=False)
 
+class AnalysisStatus(str, enum.Enum):
+    PENDING = "pendiente"
+    IN_PROGRESS = "en_progreso"
+    COMPLETED = "completado"
+
 class Analysis(Base):
     __tablename__ = "analysis"
 
     id = Column(Integer, primary_key=True, index=True)
     news_id = Column(Integer, ForeignKey("news.id"), unique=True)
-    investigator_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
     
     # Campos estructurados solicitados en el diseño
-    structured_data = Column(Text) # Aquí guardaremos el JSON del análisis
-    status = Column(String, default="pendiente") # pendiente, en_revision, aprobado, rechazado
+    structured_data = Column(JSON) # Aquí guardaremos el JSON del análisis
+    status = Column(Enum(AnalysisStatus), default=AnalysisStatus.PENDING)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     news = relationship("News", back_populates="analysis")
     investigator = relationship("User")
