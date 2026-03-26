@@ -1,5 +1,5 @@
 from app.database.config import SessionLocal
-from app.database.models import User, UserRole
+from app.database.models import User, RoleEnum
 from app.core.security import get_password_hash
 
 def create_first_admin():
@@ -10,8 +10,9 @@ def create_first_admin():
         admin_user = User(
             username="admin",
             email="admin@observatoriovm.org",
+            nombre_completo="Administrador Sistema",
             hashed_password=get_password_hash("admin123"), # Cambia esto luego
-            role=UserRole.ADMIN,
+            role=RoleEnum.ADMIN,
             is_active=True
         )
         db.add(admin_user)

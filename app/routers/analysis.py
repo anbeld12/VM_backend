@@ -1,13 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from typing import List, Optional
-from datetime import datetime
-
+from typing import List
 from app.database.config import get_db
 from app.database import models
 from app.schemas import NewsOut, AnalysisCreate, AnalysisRead, AnalysisStats
-from app.core.auth import get_current_user, check_investigator_role
+from app.core.auth import get_current_user, require_analyst
 
 router = APIRouter(
     prefix="/analysis",
@@ -23,12 +21,8 @@ def get_pending_news(
     current_user: models.User = Depends(get_current_user)
 ):
     """
-    Obtiene las noticias recolectadas que NO tienen un análisis PENDING en la tabla `analysis`.
+    Obtiene las noticias recolectadas que NO tienen un análisis o cuyo status sea 'PENDING'.
     """
-    # Subquery to find news_ids that have an analysis that is NOT pending
-    # Oh wait, the prompt says: "Devuelve noticias que NO tienen un registro en la tabla `analysis` o cuyo status sea 'PENDING'."
-    # So we want news where analysis is null OR analysis.status == 'pendiente'
-    
     query = db.query(models.News).outerjoin(models.Analysis).filter(
         (models.Analysis.id == None) | (models.Analysis.status == models.AnalysisStatus.PENDING)
     ).order_by(models.News.scraped_at.desc()).offset(skip).limit(limit)
@@ -40,7 +34,7 @@ def create_or_update_analysis(
     news_id: int,
     analysis_data: AnalysisCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(check_investigator_role)
+    current_user: models.User = Depends(require_analyst)
 ):
     """
     Crea o actualiza un análisis para una noticia específica.
@@ -52,6 +46,10 @@ def create_or_update_analysis(
         
     analysis = db.query(models.Analysis).filter(models.Analysis.news_id == news_id).first()
     
+    analysis_dict = analysis_data.model_dump()
+    analysis_dict["status"] = models.AnalysisStatus.COMPLETED
+    analysis_dict["user_id"] = current_user.id
+    
     if analysis:
         # Validar si ya está siendo analizada de forma no PENDING
         if analysis.status != models.AnalysisStatus.PENDING:
@@ -61,10 +59,9 @@ def create_or_update_analysis(
             )
         
         # Update existing analysis
-        analysis.user_id = current_user.id
-        # El pydantic model dict conversion
-        analysis.structured_data = analysis_data.structured_data.dict()
-        analysis.status = models.AnalysisStatus.COMPLETED
+        for key, value in analysis_dict.items():
+            setattr(analysis, key, value)
+        
         db.commit()
         db.refresh(analysis)
         return analysis
@@ -72,9 +69,7 @@ def create_or_update_analysis(
         # Create new analysis
         new_analysis = models.Analysis(
             news_id=news_id,
-            user_id=current_user.id,
-            structured_data=analysis_data.structured_data.dict(),
-            status=models.AnalysisStatus.COMPLETED
+            **analysis_dict
         )
         db.add(new_analysis)
         db.commit()
@@ -95,9 +90,6 @@ def get_analysis_stats(
         models.Analysis.status == models.AnalysisStatus.COMPLETED
     ).scalar()
     
-    # Pendientes son: Total - Todo lo que no está pendiente/en progeso/completado 
-    # The prompt actually asks for "cuántas noticias hay analizadas y cuántas pendientes."
-    # Pendiente could be: No analysis at all, or analysis status == PENDING
     pending_analysis = db.query(func.count(models.Analysis.id)).filter(
         models.Analysis.status == models.AnalysisStatus.PENDING
     ).scalar()

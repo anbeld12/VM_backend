@@ -2,8 +2,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+from typing import List
 from app.database.config import get_db
-from app.database import models
+from app.database.models import User, RoleEnum
 from app.core import security
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -22,19 +23,30 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except JWTError:
         raise credentials_exception
         
-    user = db.query(models.User).filter(models.User.username == username).first()
+    user = db.query(User).filter(User.username == username).first()
     if user is None:
         raise credentials_exception
     return user
 
-# Función para verificar roles
-def check_admin_role(current_user: models.User = Depends(get_current_user)):
-    if current_user.role != models.UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Operación no permitida para este rol")
-    return current_user
+class RoleChecker:
+    def __init__(self, allowed_roles: List[RoleEnum]):
+        self.allowed_roles = allowed_roles
 
-def check_investigator_role(current_user: models.User = Depends(get_current_user)):
-    allowed_roles = [models.UserRole.ADMIN, models.UserRole.COORDINADOR, models.UserRole.INVESTIGADOR]
-    if current_user.role not in allowed_roles:
-        raise HTTPException(status_code=403, detail="Se requiere rol de Investigador o superior")
-    return current_user
+    def __call__(self, current_user: User = Depends(get_current_user)):
+        if current_user.role not in self.allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes los permisos necesarios para realizar esta acción"
+            )
+        return current_user
+
+# Dependencias preconfiguradas para uso en routers
+require_admin = RoleChecker([RoleEnum.ADMIN])
+require_analyst = RoleChecker([RoleEnum.ADMIN, RoleEnum.REVISOR, RoleEnum.INVESTIGADOR])
+require_reader = RoleChecker([
+    RoleEnum.ADMIN, 
+    RoleEnum.REVISOR, 
+    RoleEnum.INVESTIGADOR, 
+    RoleEnum.TECNICO, 
+    RoleEnum.LECTOR
+])

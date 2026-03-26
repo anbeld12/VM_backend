@@ -10,9 +10,6 @@ SPIDERS = [
     "elespectador",
     "semana",
     "lasillavacia",
-    "verdadabierta",
-    "elcolombiano",
-    "elpaiscali",
     "cambio",
     "bluradio",
     "law",
@@ -21,6 +18,9 @@ SPIDERS = [
     "las2orillas",
     "noticiasuno",
     "rtvcnoticias",
+    "lafm",
+    "cmi",
+    "cuestionpublica",
 ]
 
 

@@ -1,6 +1,6 @@
-from typing import Optional, List, Literal, Any, Dict
-from pydantic import BaseModel, EmailStr, Field
-from app.database.models import UserRole
+from typing import Optional, List, Any
+from pydantic import BaseModel, EmailStr
+from app.database.models import RoleEnum, EnfoqueEnum, AnalysisStatus
 from datetime import datetime
 
 # Esquema para el Token
@@ -11,16 +11,27 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
-# Esquema para mostrar datos de usuario
-class UserOut(BaseModel):
-    id: int
+# Esquemas de Usuario
+class UserBase(BaseModel):
     username: str
     email: EmailStr
-    role: UserRole
+    nombre_completo: str
+    role: RoleEnum = RoleEnum.LECTOR
+
+class UserCreate(UserBase):
+    password: str
+
+class UserRead(UserBase):
+    id: int
     is_active: bool
+    ultimo_login: Optional[datetime] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True
+
+# Alias para mantener compatibilidad si es necesario (opcional, pero sugerido si se usa UserOut en otros lados)
+UserOut = UserRead
 
 class NewsBase(BaseModel):
     title: str
@@ -36,22 +47,18 @@ class NewsOut(NewsBase):
         from_attributes = True
 
 # Schemas de Análisis Cualitativo
-class StructuredData(BaseModel):
+class AnalysisCreate(BaseModel):
+    enfoque: EnfoqueEnum
     actor_involucrado: List[str]
     tipo_violencia: List[str]
-    enfoque: Literal["Paz", "Conflicto", "Memoria"]
-    etiquetas_adicionales: List[str] = Field(default_factory=list)
-    observaciones: str
+    etiquetas_adicionales: Optional[List[str]] = []
+    observaciones: Optional[str] = None
 
-class AnalysisCreate(BaseModel):
-    structured_data: StructuredData
-
-class AnalysisRead(BaseModel):
+class AnalysisRead(AnalysisCreate):
     id: int
     news_id: int
     user_id: int
-    status: Any
-    structured_data: Dict[str, Any]
+    status: AnalysisStatus
     created_at: datetime
     updated_at: datetime
 
