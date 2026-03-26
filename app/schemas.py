@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from app.database.models import UserRole
+from datetime import datetime
 
 # Esquema para el Token
 class Token(BaseModel):
@@ -17,6 +18,19 @@ class UserOut(BaseModel):
     email: EmailStr
     role: UserRole
     is_active: bool
+
+    class Config:
+        from_attributes = True
+
+class NewsBase(BaseModel):
+    title: str
+    url: str
+    media_source: str
+    published_date: Optional[datetime] = None
+
+class NewsOut(NewsBase):
+    id: int
+    scraped_at: datetime
 
     class Config:
         from_attributes = True

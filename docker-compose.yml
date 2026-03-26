@@ -15,6 +15,17 @@ services:
     depends_on:
       - db
       - redis
+  scraper:
+    build: ./vm_scraper
+    container_name: vm_scraper
+    volumes:
+      - ./vm_scraper:/scraper
+    environment:
+      - DATABASE_URL=postgresql://postgres:vm_admin123@db:5432/observatorio_vm
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
 
   db:
     image: postgres:15-alpine
