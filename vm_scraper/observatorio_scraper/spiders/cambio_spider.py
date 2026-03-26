@@ -2,21 +2,23 @@ import scrapy
 from scrapy_redis.spiders import RedisSpider
 from observatorio_scraper.spiders.diccionario import TERMINOS_ESTRATEGICOS
 
-class LaSillaVaciaSpider(RedisSpider):
-    name = "lasillavacia"
-    allowed_domains = ["lasillavacia.com"]
-    start_urls = ["https://www.lasillavacia.com/categorias/poder/"]
+class CambioSpider(RedisSpider):
+    name = "cambio"
+    allowed_domains = ["cambiocolombia.com"]
+    start_urls = ["https://cambiocolombia.com/pais"]
 
     def parse(self, response):
-        enlaces = response.css('h2 a::attr(href), h3 a::attr(href), .ds-card-title a::attr(href)').getall()
-        for enlace in enlaces:
+        # Selectores comunes para enlaces de noticias
+        enlaces = response.css('article a::attr(href), h2 a::attr(href), h3 a::attr(href)').getall()
+        for enlace in set(enlaces):
             url_completa = response.urljoin(enlace)
             yield scrapy.Request(url_completa, callback=self.parse_noticia)
 
     def parse_noticia(self, response):
-        titulo = response.css('h1::text, .post-title::text').get()
+        titulo = response.css('h1::text, article h1::text, .article-title::text').get()
         
-        parrafos = response.css('.post-content p::text, article p::text, .content p::text').getall()
+        # Selectores de párrafos comunes
+        parrafos = response.css('article p::text, .article-content p::text, .p-content p::text').getall()
         if not parrafos:
             parrafos = response.css('p::text').getall()
             
@@ -27,6 +29,7 @@ class LaSillaVaciaSpider(RedisSpider):
 
         texto_para_filtrar = f"{titulo} {contenido}".lower()
         
+        # Filtro de relevancia utilizando términos estratégicos
         encontrados = [t for t in TERMINOS_ESTRATEGICOS if t.lower() in texto_para_filtrar]
 
         if encontrados:
@@ -34,6 +37,6 @@ class LaSillaVaciaSpider(RedisSpider):
                 'titulo': titulo.strip(),
                 'contenido': contenido,
                 'url': response.url,
-                'fuente': 'La Silla Vacía',
-                'fecha_publicacion': response.css('meta[property="article:published_time"]::attr(content), time::attr(datetime)').get()
+                'fuente': 'Cambio',
+                'fecha_publicacion': response.css('meta[property="article:published_time"]::attr(content), time::attr(datetime), .date::text').get()
             }

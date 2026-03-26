@@ -91,3 +91,21 @@ ITEM_PIPELINES = {
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
+
+import os
+
+# Habilitar el Scheduler de Scrapy-Redis
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+
+# Asegurar que todas las arañas compartan la misma cola a través de Redis
+SCHEDULER_PERSIST = True
+
+# Utilizar el filtro de duplicados de Scrapy-Redis
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+
+# Configuración de conexión a Redis obtenida de variables de entorno (con fallbacks configurados)
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+
+# Opcional: Prioridad de la cola (FIFO)
+SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.PriorityQueue'

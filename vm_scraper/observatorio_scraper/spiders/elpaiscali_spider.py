@@ -1,7 +1,8 @@
 import scrapy
+from scrapy_redis.spiders import RedisSpider
 from observatorio_scraper.spiders.diccionario import TERMINOS_ESTRATEGICOS
 
-class ElPaisCaliSpider(scrapy.Spider):
+class ElPaisCaliSpider(RedisSpider):
     name = "elpaiscali"
     allowed_domains = ["elpais.com.co"]
     start_urls = ["https://www.elpais.com.co/colombia"]

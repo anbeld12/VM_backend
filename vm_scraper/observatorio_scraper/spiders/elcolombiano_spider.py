@@ -1,7 +1,8 @@
 import scrapy
+from scrapy_redis.spiders import RedisSpider
 from observatorio_scraper.spiders.diccionario import TERMINOS_ESTRATEGICOS
 
-class ElColombianoSpider(scrapy.Spider):
+class ElColombianoSpider(RedisSpider):
     name = "elcolombiano"
     allowed_domains = ["elcolombiano.com"]
     start_urls = ["https://www.elcolombiano.com/colombia"]

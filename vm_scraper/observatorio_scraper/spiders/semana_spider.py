@@ -1,7 +1,8 @@
 import scrapy
+from scrapy_redis.spiders import RedisSpider
 from observatorio_scraper.spiders.diccionario import TERMINOS_ESTRATEGICOS
 
-class SemanaSpider(scrapy.Spider):
+class SemanaSpider(RedisSpider):
     name = "semana"
     allowed_domains = ["semana.com"]
     start_urls = ["https://www.semana.com/nacion/"]

@@ -1,8 +1,9 @@
 import scrapy
+from scrapy_redis.spiders import RedisSpider
 from datetime import datetime
 from observatorio_scraper.spiders.diccionario import TERMINOS_ESTRATEGICOS # <-- Importamos el diccionario global
 
-class ElTiempoSpider(scrapy.Spider):
+class ElTiempoSpider(RedisSpider):
     name = "eltiempo"
     allowed_domains = ["eltiempo.com"]
     start_urls = ["https://www.eltiempo.com/justicia/conflicto-y-narcotrafico"]

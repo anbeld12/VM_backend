@@ -1,7 +1,8 @@
 import scrapy
+from scrapy_redis.spiders import RedisSpider
 from observatorio_scraper.spiders.diccionario import TERMINOS_ESTRATEGICOS
 
-class VerdadAbiertaSpider(scrapy.Spider):
+class VerdadAbiertaSpider(RedisSpider):
     name = "verdadabierta"
     allowed_domains = ["verdadabierta.com"]
     start_urls = ["https://verdadabierta.com/"]

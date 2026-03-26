@@ -1,10 +1,11 @@
 # vm_scraper/observatorio_scraper/spiders/elespectador_spider.py
 
 import scrapy
+from scrapy_redis.spiders import RedisSpider
 from datetime import datetime
 from observatorio_scraper.spiders.diccionario import TERMINOS_ESTRATEGICOS
 
-class ElEspectadorSpider(scrapy.Spider):
+class ElEspectadorSpider(RedisSpider):
     name = "elespectador"
     allowed_domains = ["elespectador.com"]
     # Apuntamos a las secciones relevantes para V&M
