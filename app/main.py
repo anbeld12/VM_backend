@@ -7,12 +7,13 @@ from app import schemas
 from app.core import security, auth
 from typing import List
 from app.schemas import NewsOut
-from app.routers import analysis
+from app.routers import analysis, reports
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API Observatorio V&M", version="1.0.0")
 
 app.include_router(analysis.router)
+app.include_router(reports.router)
 
 @app.post("/auth/login", response_model=schemas.Token)
 def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):

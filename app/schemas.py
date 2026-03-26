@@ -46,6 +46,8 @@ class NewsOut(NewsBase):
     class Config:
         from_attributes = True
 
+NewsRead = NewsOut
+
 # Schemas de Análisis Cualitativo
 class AnalysisCreate(BaseModel):
     enfoque: EnfoqueEnum
