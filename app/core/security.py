@@ -4,8 +4,14 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-# Configuración secreta — NUNCA hardcodear en producción
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGE_ME_IN_PRODUCTION")
+# Configuración secreta — Debe estar definida en variables de entorno
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY or SECRET_KEY == "CHANGE_ME_IN_PRODUCTION":
+    raise ValueError(
+        "ERROR CRÍTICO: JWT_SECRET_KEY no está configurada o usa valor por defecto.\n"
+        "Genera una clave segura con: openssl rand -hex 32\n"
+        "Y establécela en tu archivo .env como JWT_SECRET_KEY=<la_clave>"
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 1 día
 

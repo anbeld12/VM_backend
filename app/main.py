@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
@@ -13,10 +14,10 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API Observatorio V&M", version="1.0.0")
 
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# Cargar CORS origins desde variables de entorno
+default_origins = "http://localhost:5173,http://127.0.0.1:5173"
+cors_origins_str = os.getenv("CORS_ORIGINS", default_origins)
+origins = [origin.strip() for origin in cors_origins_str.split(",")]
 
 app.add_middleware(
     CORSMiddleware,

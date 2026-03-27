@@ -22,7 +22,13 @@ class NewsModel(Base):
 class ObservatorioScraperPipeline:
     def __init__(self):
         # Conectamos a la base de datos usando la variable de entorno de Docker
-        db_url = os.getenv("DATABASE_URL", "postgresql://postgres:vm_admin123@db:5432/observatorio_vm")
+        db_url = os.getenv("DATABASE_URL")
+        if not db_url:
+            raise ValueError(
+                "ERROR CRÍTICO: DATABASE_URL no está definida en variables de entorno.\n"
+                "Asegúrate de que el archivo .env está configurado correctamente.\n"
+                "Ejemplo: postgresql://postgres:password@db:5432/observatorio_vm"
+            )
         self.engine = create_engine(db_url)
         self.Session = sessionmaker(bind=self.engine)
 
