@@ -12,7 +12,7 @@ COPY ./requirements.txt /code/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 # Copiar el código de la aplicación
-COPY ./app /code/app
+COPY . /code/
 
 # Exponer el puerto de FastAPI
 EXPOSE 8000

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database.config import engine, Base, get_db
@@ -12,12 +13,28 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API Observatorio V&M", version="1.0.0")
 
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(analysis.router)
 app.include_router(reports.router)
 
 @app.post("/auth/login", response_model=schemas.Token)
 def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
-    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    # Aceptamos login por username o email para alinearnos con el frontend.
+    user = db.query(models.User).filter(
+        (models.User.username == form_data.username) | (models.User.email == form_data.username)
+    ).first()
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
