@@ -1,9 +1,19 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde .env (útil al ejecutar fuera de Docker)
+load_dotenv()
 
 # Obtener la URL de la base de datos desde las variables de entorno
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError(
+        "ERROR CRÍTICO: DATABASE_URL no está definida en las variables de entorno.\n"
+        "Asegúrate de que el archivo .env está configurado correctamente."
+    )
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

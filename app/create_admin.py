@@ -1,4 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno al ejecutar como script independiente
+load_dotenv()
 from app.database.config import SessionLocal
 from app.database.models import User, RoleEnum
 from app.core.security import get_password_hash
